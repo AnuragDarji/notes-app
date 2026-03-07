@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import NotesClient from "@/components/NotesClient";
 import dbConnect from "@/lib/db";
 import Note from "@/models/Note";
