@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   description: "A simple notes app built with Next.js",
   icons: {
     icon: "/notepad.png",
+    shortcut: "/notepad.png",
   },
 };
 
