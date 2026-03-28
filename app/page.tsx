@@ -35,20 +35,81 @@ export default async function Home() {
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+        /* ── Light theme (default) ── */
         :root {
-          --cream: #f7f5f0;
-          --ink: #1a1a1a;
-          --amber: #b45309;
-          --muted: #9b9186;
-          --border: #e8e3d8;
-          --max-w: 1100px;
+          --bg-page:        #f7f5f0;
+          --bg-surface:     #ffffff;
+          --bg-subtle:      #f0ede6;
+          --bg-input:       #faf9f6;
+          --text-primary:   #1a1a1a;
+          --text-secondary: #555555;
+          --text-muted:     #9b9186;
+          --text-faint:     #bbbbbb;
+          --border:         #e8e3d8;
+          --border-soft:    #e0dbd0;
+          --accent:         #b45309;
+          --accent-light:   #fef3c7;
+          --hero-bg:        #1a1a1a;
+          --hero-grid:      rgba(255,255,255,0.065);
+          --hero-glow:      rgba(180,83,9,0.22);
+          --hero-tag-bg:    rgba(255,255,255,0.07);
+          --hero-tag-bd:    rgba(255,255,255,0.10);
+          --hero-tag-txt:   rgba(255,255,255,0.40);
+          --hero-sub-txt:   rgba(255,255,255,0.35);
+          --stat-bg:        rgba(255,255,255,0.05);
+          --stat-bd:        rgba(255,255,255,0.08);
+          --stat-num:       #ffffff;
+          --stat-label:     rgba(255,255,255,0.28);
+          --topbar-bg:      rgba(247,245,240,0.88);
+          --logo-icon-bg:   #1a1a1a;
+          --logo-icon-str:  #ffffff;
+          --logo-text:      #1a1a1a;
+          --logo-em:        #b45309;
+          --status-dot:     #22c55e;
+          --status-shadow:  rgba(34,197,94,0.22);
+          --max-w:          1100px;
+        }
+
+        /* ── Dark theme ── */
+        html[data-theme="dark"] {
+          --bg-page:        #131110;
+          --bg-surface:     #1e1b17;
+          --bg-subtle:      #282420;
+          --bg-input:       #1a1714;
+          --text-primary:   #edeae4;
+          --text-secondary: #a09488;
+          --text-muted:     #706860;
+          --text-faint:     #504840;
+          --border:         #2e2924;
+          --border-soft:    #332e28;
+          --accent:         #f6c05a;
+          --accent-light:   #3d2e08;
+          --hero-bg:        #0c0b09;
+          --hero-grid:      rgba(255,255,255,0.03);
+          --hero-glow:      rgba(246,192,90,0.10);
+          --hero-tag-bg:    rgba(255,255,255,0.04);
+          --hero-tag-bd:    rgba(255,255,255,0.07);
+          --hero-tag-txt:   rgba(255,255,255,0.30);
+          --hero-sub-txt:   rgba(255,255,255,0.28);
+          --stat-bg:        rgba(255,255,255,0.03);
+          --stat-bd:        rgba(255,255,255,0.06);
+          --stat-num:       #edeae4;
+          --stat-label:     rgba(255,255,255,0.22);
+          --topbar-bg:      rgba(19,17,16,0.90);
+          --logo-icon-bg:   #2a2620;
+          --logo-icon-str:  #edeae4;
+          --logo-text:      #edeae4;
+          --logo-em:        #f6c05a;
+          --status-dot:     #22c55e;
+          --status-shadow:  rgba(34,197,94,0.18);
         }
 
         html, body {
-          background: var(--cream);
+          background: var(--bg-page);
           font-family: 'DM Sans', sans-serif;
-          color: var(--ink);
+          color: var(--text-primary);
           -webkit-font-smoothing: antialiased;
+          transition: background 0.25s ease, color 0.25s ease;
         }
 
         /* ── Topbar ── */
@@ -56,7 +117,7 @@ export default async function Home() {
           position: sticky;
           top: 0;
           z-index: 20;
-          background: rgba(247,245,240,0.88);
+          background: var(--topbar-bg);
           backdrop-filter: blur(14px);
           -webkit-backdrop-filter: blur(14px);
           border-bottom: 1px solid var(--border);
@@ -64,6 +125,7 @@ export default async function Home() {
           display: flex;
           align-items: center;
           padding: 0 2rem;
+          transition: background 0.25s ease, border-color 0.25s ease;
         }
 
         .topbar-inner {
@@ -83,20 +145,23 @@ export default async function Home() {
         }
         .topbar-logo-icon {
           width: 32px; height: 32px;
-          background: var(--ink);
+          background: var(--logo-icon-bg);
           border-radius: 9px;
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
+          transition: background 0.25s ease;
         }
         .topbar-logo-text {
           font-family: 'Instrument Serif', serif;
           font-size: 1.25rem;
-          color: var(--ink);
+          color: var(--logo-text);
           letter-spacing: -0.01em;
+          transition: color 0.25s ease;
         }
         .topbar-logo-text em {
           font-style: italic;
-          color: var(--amber);
+          color: var(--logo-em);
+          transition: color 0.25s ease;
         }
 
         .topbar-right {
@@ -106,8 +171,9 @@ export default async function Home() {
         }
         .topbar-date {
           font-size: 0.78rem;
-          color: var(--muted);
+          color: var(--text-muted);
           display: none;
+          transition: color 0.25s ease;
         }
         @media (min-width: 600px) { .topbar-date { display: block; } }
 
@@ -116,37 +182,41 @@ export default async function Home() {
           align-items: center;
           gap: 0.4rem;
           font-size: 0.75rem;
-          color: var(--muted);
+          color: var(--text-muted);
+          transition: color 0.25s ease;
         }
         .status-dot {
           width: 7px; height: 7px;
           border-radius: 50%;
-          background: #22c55e;
-          box-shadow: 0 0 0 2.5px rgba(34,197,94,0.22);
+          background: var(--status-dot);
+          box-shadow: 0 0 0 2.5px var(--status-shadow);
           flex-shrink: 0;
         }
 
         /* ── Hero ── */
         .hero {
-          background: var(--ink);
+          background: var(--hero-bg);
           position: relative;
           overflow: hidden;
           padding: 3.5rem 2rem 3rem;
+          transition: background 0.25s ease;
         }
         .hero::before {
           content: '';
           position: absolute;
           inset: 0;
-          background: radial-gradient(ellipse at 72% 60%, rgba(180,83,9,0.22) 0%, transparent 65%);
+          background: radial-gradient(ellipse at 72% 60%, var(--hero-glow) 0%, transparent 65%);
           pointer-events: none;
+          transition: background 0.25s ease;
         }
         .hero::after {
           content: '';
           position: absolute;
           inset: 0;
-          background-image: radial-gradient(circle, rgba(255,255,255,0.065) 1px, transparent 1px);
+          background-image: radial-gradient(circle, var(--hero-grid) 1px, transparent 1px);
           background-size: 26px 26px;
           pointer-events: none;
+          transition: background-image 0.25s ease;
         }
 
         .hero-inner {
@@ -165,15 +235,16 @@ export default async function Home() {
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
-          background: rgba(255,255,255,0.07);
-          border: 1px solid rgba(255,255,255,0.1);
+          background: var(--hero-tag-bg);
+          border: 1px solid var(--hero-tag-bd);
           border-radius: 99px;
           padding: 0.28rem 0.75rem;
           font-size: 0.7rem;
-          color: rgba(255,255,255,0.4);
+          color: var(--hero-tag-txt);
           text-transform: uppercase;
           letter-spacing: 0.09em;
           margin-bottom: 1rem;
+          transition: background 0.25s ease, color 0.25s ease;
         }
         .hero-tag-dot {
           width: 5px; height: 5px;
@@ -195,10 +266,11 @@ export default async function Home() {
         }
         .hero-sub {
           font-size: 0.875rem;
-          color: rgba(255,255,255,0.35);
+          color: var(--hero-sub-txt);
           margin-top: 0.7rem;
           font-weight: 300;
           line-height: 1.65;
+          transition: color 0.25s ease;
         }
 
         .hero-stats {
@@ -207,25 +279,28 @@ export default async function Home() {
           flex-shrink: 0;
         }
         .stat-card {
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08);
+          background: var(--stat-bg);
+          border: 1px solid var(--stat-bd);
           border-radius: 14px;
           padding: 1rem 1.5rem;
           text-align: center;
           min-width: 90px;
+          transition: background 0.25s ease, border-color 0.25s ease;
         }
         .stat-card-num {
           font-family: 'Instrument Serif', serif;
           font-size: 2.2rem;
-          color: #fff;
+          color: var(--stat-num);
           line-height: 1;
+          transition: color 0.25s ease;
         }
         .stat-card-label {
           font-size: 0.67rem;
-          color: rgba(255,255,255,0.28);
+          color: var(--stat-label);
           text-transform: uppercase;
           letter-spacing: 0.09em;
           margin-top: 0.3rem;
+          transition: color 0.25s ease;
         }
 
         /* ── Page content ── */
@@ -249,7 +324,7 @@ export default async function Home() {
         <div className="topbar-inner">
           <div className="topbar-logo">
             <div className="topbar-logo-icon">
-              <svg width="16" height="16" fill="none" stroke="#fff" strokeWidth="2.2" viewBox="0 0 24 24">
+              <svg width="16" height="16" fill="none" stroke="var(--logo-icon-str)" strokeWidth="2.2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487 18.549 2.8a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
               </svg>
             </div>
