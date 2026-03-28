@@ -16,6 +16,7 @@ interface NotesClientProps {
 }
 
 type ViewMode = "grid" | "list";
+type Theme = "light" | "dark";
 
 const NotesClient = ({ initialNotes }: NotesClientProps) => {
   const [notes, setNotes] = useState<Note[]>(initialNotes);
@@ -27,11 +28,29 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [theme, setTheme] = useState<Theme>("light");
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState<string>("");
   const [editContent, setEditContent] = useState<string>("");
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+
+  // Initialise theme from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("nw-theme") as Theme | null;
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const initial: Theme = stored ?? (prefersDark ? "dark" : "light");
+    setTheme(initial);
+    document.documentElement.setAttribute("data-theme", initial);
+  }, []);
+
+  // Apply theme to <html> whenever it changes
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("nw-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === "light" ? "dark" : "light"));
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -157,16 +176,33 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
     </svg>
   );
 
+  const SunIcon = () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="4" />
+      <path strokeLinecap="round" d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+    </svg>
+  );
+
+  const MoonIcon = () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
 
+        /* ─────────────────────────────────────────
+           All colours reference CSS variables set
+           on <html> by page.tsx & the toggle effect
+        ───────────────────────────────────────── */
+
         .notes-root {
           font-family: 'DM Sans', sans-serif;
-          min-height: 100vh;
-          background: #f7f5f0;
           padding: 2.5rem 1.5rem;
+          transition: color 0.25s ease;
         }
 
         .notes-header {
@@ -180,18 +216,19 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
         .notes-title {
           font-family: 'Instrument Serif', serif;
           font-size: 2.4rem;
-          color: #1a1a1a;
+          color: var(--text-primary);
           letter-spacing: -0.02em;
           line-height: 1.1;
+          transition: color 0.25s ease;
         }
-        .notes-title span { font-style: italic; color: #b45309; }
+        .notes-title span { font-style: italic; color: var(--accent); transition: color 0.25s ease; }
 
         .btn-new {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          background: #1a1a1a;
-          color: #f7f5f0;
+          background: var(--text-primary);
+          color: var(--bg-page);
           border: none;
           padding: 0.65rem 1.3rem;
           border-radius: 99px;
@@ -199,10 +236,10 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
           font-size: 0.9rem;
           font-weight: 500;
           cursor: pointer;
-          transition: background 0.18s, transform 0.12s;
+          transition: background 0.18s, color 0.18s, transform 0.12s;
           white-space: nowrap;
         }
-        .btn-new:hover { background: #333; transform: translateY(-1px); }
+        .btn-new:hover { opacity: 0.85; transform: translateY(-1px); }
 
         /* ── Toolbar ── */
         .toolbar {
@@ -221,36 +258,39 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
         .search-bar input {
           width: 100%;
           padding: 0.65rem 1rem 0.65rem 2.6rem;
-          border: 1.5px solid #e0dbd0;
+          border: 1.5px solid var(--border-soft);
           border-radius: 99px;
-          background: #fff;
+          background: var(--bg-surface);
           font-family: 'DM Sans', sans-serif;
           font-size: 0.9rem;
-          color: #1a1a1a;
+          color: var(--text-primary);
           outline: none;
-          transition: border-color 0.18s;
+          transition: border-color 0.18s, background 0.25s ease, color 0.25s ease;
           box-sizing: border-box;
         }
-        .search-bar input:focus { border-color: #b45309; }
+        .search-bar input::placeholder { color: var(--text-muted); }
+        .search-bar input:focus { border-color: var(--accent); }
         .search-bar .search-icon {
           position: absolute;
           left: 0.85rem;
           top: 50%;
           transform: translateY(-50%);
-          color: #999;
+          color: var(--text-muted);
           pointer-events: none;
+          transition: color 0.25s ease;
         }
 
         /* ── View toggle ── */
         .view-toggle {
           display: flex;
           align-items: center;
-          background: #fff;
-          border: 1.5px solid #e0dbd0;
+          background: var(--bg-surface);
+          border: 1.5px solid var(--border-soft);
           border-radius: 10px;
           padding: 3px;
           gap: 2px;
           flex-shrink: 0;
+          transition: background 0.25s ease, border-color 0.25s ease;
         }
         .view-btn {
           display: flex;
@@ -262,17 +302,39 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
           border-radius: 7px;
           cursor: pointer;
           background: transparent;
-          color: #bbb;
+          color: var(--text-faint);
           transition: background 0.15s, color 0.15s;
         }
-        .view-btn:hover { color: #555; background: #f7f5f0; }
-        .view-btn.active { background: #1a1a1a; color: #fff; }
+        .view-btn:hover { color: var(--text-secondary); background: var(--bg-subtle); }
+        .view-btn.active { background: var(--text-primary); color: var(--bg-page); }
+
+        /* ── Theme toggle ── */
+        .theme-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 38px;
+          height: 38px;
+          border: 1.5px solid var(--border-soft);
+          border-radius: 10px;
+          cursor: pointer;
+          background: var(--bg-surface);
+          color: var(--text-secondary);
+          flex-shrink: 0;
+          transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.15s;
+        }
+        .theme-btn:hover {
+          background: var(--bg-subtle);
+          color: var(--accent);
+          transform: rotate(15deg) scale(1.05);
+        }
 
         /* ── Meta ── */
         .notes-meta {
           font-size: 0.82rem;
-          color: #999;
+          color: var(--text-muted);
           margin-bottom: 1.5rem;
+          transition: color 0.25s ease;
         }
 
         /* ── Grid layout ── */
@@ -291,10 +353,10 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
 
         /* ── Shared card base ── */
         .note-card {
-          background: #fff;
+          background: var(--bg-surface);
           position: relative;
           overflow: hidden;
-          transition: transform 0.18s, box-shadow 0.18s, opacity 0.2s;
+          transition: transform 0.18s, box-shadow 0.18s, opacity 0.2s, background 0.25s ease;
         }
         .note-card.is-deleting {
           opacity: 0.4;
@@ -309,17 +371,24 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
           box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
           display: flex;
           flex-direction: column;
+          border: 1px solid var(--border);
+        }
+        html[data-theme="dark"] .note-card.grid-card {
+          box-shadow: 0 1px 4px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
         }
         .note-card.grid-card::before {
           content: '';
           position: absolute;
           top: 0; left: 0; right: 0;
           height: 3px;
-          background: var(--accent, #f59e0b);
+          background: var(--accent-color, #f59e0b);
         }
         .note-card.grid-card:hover {
           transform: translateY(-3px);
           box-shadow: 0 4px 12px rgba(0,0,0,0.09), 0 12px 32px rgba(0,0,0,0.07);
+        }
+        html[data-theme="dark"] .note-card.grid-card:hover {
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 12px 32px rgba(0,0,0,0.3);
         }
 
         .grid-card-header {
@@ -332,9 +401,10 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
         .grid-card-title {
           font-family: 'Instrument Serif', serif;
           font-size: 1.2rem;
-          color: #1a1a1a;
+          color: var(--text-primary);
           line-height: 1.3;
           flex: 1;
+          transition: color 0.25s ease;
         }
         .grid-card-actions {
           display: flex;
@@ -348,7 +418,7 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
 
         .grid-card-content {
           font-size: 0.875rem;
-          color: #555;
+          color: var(--text-secondary);
           line-height: 1.65;
           flex: 1;
           display: -webkit-box;
@@ -356,15 +426,17 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
           -webkit-box-orient: vertical;
           overflow: hidden;
           margin-bottom: 1rem;
+          transition: color 0.25s ease;
         }
         .grid-card-footer {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border-top: 1px solid #f0ede6;
+          border-top: 1px solid var(--border);
           padding-top: 0.7rem;
           font-size: 0.75rem;
-          color: #bbb;
+          color: var(--text-faint);
+          transition: border-color 0.25s ease, color 0.25s ease;
         }
 
         /* ── List card ── */
@@ -374,18 +446,25 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
           display: flex;
           flex-direction: row;
           align-items: stretch;
+          border: 1px solid var(--border);
+        }
+        html[data-theme="dark"] .note-card.list-card {
+          box-shadow: 0 1px 3px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.2);
         }
         .note-card.list-card::before {
           content: '';
           position: absolute;
           top: 0; left: 0; bottom: 0;
           width: 3px;
-          background: var(--accent, #f59e0b);
+          background: var(--accent-color, #f59e0b);
           border-radius: 12px 0 0 12px;
         }
         .note-card.list-card:hover {
           transform: translateX(3px);
           box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 6px 20px rgba(0,0,0,0.06);
+        }
+        html[data-theme="dark"] .note-card.list-card:hover {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.35), 0 6px 20px rgba(0,0,0,0.25);
         }
 
         .list-card-inner {
@@ -400,18 +479,20 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
         .list-card-title {
           font-family: 'Instrument Serif', serif;
           font-size: 1.05rem;
-          color: #1a1a1a;
+          color: var(--text-primary);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          transition: color 0.25s ease;
         }
         .list-card-preview {
           font-size: 0.8rem;
-          color: #999;
+          color: var(--text-muted);
           margin-top: 0.1rem;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          transition: color 0.25s ease;
         }
         .list-card-meta {
           display: flex;
@@ -421,8 +502,9 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
         }
         .list-card-date {
           font-size: 0.72rem;
-          color: #bbb;
+          color: var(--text-faint);
           white-space: nowrap;
+          transition: color 0.25s ease;
         }
         .list-card-actions {
           display: flex;
@@ -444,20 +526,23 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
           justify-content: center;
           cursor: pointer;
           transition: background 0.15s;
-          color: #666;
+          color: var(--text-secondary);
         }
-        .icon-btn:hover { background: #f0ede6; }
-        .icon-btn.edit:hover { background: #eff6ff; color: #2563eb; }
-        .icon-btn.delete:hover { background: #fef2f2; color: #dc2626; }
+        .icon-btn:hover { background: var(--bg-subtle); }
+        .icon-btn.edit:hover { background: var(--accent-light); color: #2563eb; }
+        html[data-theme="dark"] .icon-btn.edit:hover { color: #93c5fd; }
+        .icon-btn.delete:hover { background: rgba(220,38,38,0.1); color: #dc2626; }
+        html[data-theme="dark"] .icon-btn.delete:hover { background: rgba(220,38,38,0.15); color: #f87171; }
         .icon-btn:disabled { cursor: not-allowed; opacity: 0.4; }
 
         /* ── Shared badges ── */
         .note-badge {
-          background: #f7f5f0;
+          background: var(--bg-subtle);
           padding: 0.2rem 0.55rem;
           border-radius: 99px;
           font-size: 0.72rem;
-          color: #999;
+          color: var(--text-muted);
+          transition: background 0.25s ease, color 0.25s ease;
         }
         .deleting-label {
           display: flex;
@@ -486,15 +571,16 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
           grid-column: 1 / -1;
           text-align: center;
           padding: 5rem 2rem;
-          color: #bbb;
+          color: var(--text-faint);
+          transition: color 0.25s ease;
         }
         .empty-state svg { margin: 0 auto 1rem; display: block; opacity: 0.3; }
-        .empty-state p { font-size: 1rem; }
+        .empty-state p { font-size: 1rem; color: var(--text-muted); }
         .empty-state strong {
           font-family: 'Instrument Serif', serif;
           font-size: 1.4rem;
           display: block;
-          color: #ccc;
+          color: var(--text-faint);
           margin-bottom: 0.3rem;
         }
 
@@ -502,7 +588,7 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
         .modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(15,12,8,0.55);
+          background: rgba(15,12,8,0.65);
           backdrop-filter: blur(4px);
           z-index: 50;
           display: flex;
@@ -511,16 +597,24 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
           padding: 1rem;
           animation: fadeIn 0.18s ease;
         }
+        html[data-theme="dark"] .modal-overlay {
+          background: rgba(5,4,3,0.75);
+        }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .modal-box {
-          background: #fff;
+          background: var(--bg-surface);
+          border: 1px solid var(--border);
           border-radius: 20px;
           padding: 2rem;
           width: 100%;
           max-width: 500px;
           box-shadow: 0 20px 60px rgba(0,0,0,0.18);
           animation: slideUp 0.22s cubic-bezier(0.34,1.56,0.64,1);
+          transition: background 0.25s ease, border-color 0.25s ease;
+        }
+        html[data-theme="dark"] .modal-box {
+          box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(24px) scale(0.97); }
@@ -535,19 +629,20 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
         .modal-title {
           font-family: 'Instrument Serif', serif;
           font-size: 1.6rem;
-          color: #1a1a1a;
+          color: var(--text-primary);
+          transition: color 0.25s ease;
         }
         .modal-close {
-          background: #f0ede6;
+          background: var(--bg-subtle);
           border: none;
           width: 34px; height: 34px;
           border-radius: 99px;
           display: flex; align-items: center; justify-content: center;
           cursor: pointer;
-          color: #666;
-          transition: background 0.15s;
+          color: var(--text-secondary);
+          transition: background 0.15s, color 0.15s;
         }
-        .modal-close:hover { background: #e5e0d6; }
+        .modal-close:hover { background: var(--border); }
         .modal-close:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .modal-field { margin-bottom: 1rem; }
@@ -557,24 +652,31 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: #999;
+          color: var(--text-muted);
           margin-bottom: 0.4rem;
+          transition: color 0.25s ease;
         }
         .modal-field input, .modal-field textarea {
           width: 100%;
           padding: 0.75rem 1rem;
-          border: 1.5px solid #e0dbd0;
+          border: 1.5px solid var(--border-soft);
           border-radius: 10px;
           font-family: 'DM Sans', sans-serif;
           font-size: 0.95rem;
-          color: #1a1a1a;
-          background: #faf9f6;
+          color: var(--text-primary);
+          background: var(--bg-input);
           outline: none;
-          transition: border-color 0.18s, background 0.18s;
+          transition: border-color 0.18s, background 0.25s ease, color 0.25s ease;
           resize: vertical;
           box-sizing: border-box;
         }
-        .modal-field input:focus, .modal-field textarea:focus { border-color: #b45309; background: #fff; }
+        .modal-field input::placeholder, .modal-field textarea::placeholder {
+          color: var(--text-muted);
+        }
+        .modal-field input:focus, .modal-field textarea:focus {
+          border-color: var(--accent);
+          background: var(--bg-surface);
+        }
         .modal-field input:disabled, .modal-field textarea:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .modal-actions {
@@ -584,23 +686,23 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
           justify-content: flex-end;
         }
         .btn-cancel {
-          background: #f0ede6;
+          background: var(--bg-subtle);
           border: none;
           padding: 0.65rem 1.3rem;
           border-radius: 10px;
           font-family: 'DM Sans', sans-serif;
           font-size: 0.9rem;
           font-weight: 500;
-          color: #666;
+          color: var(--text-secondary);
           cursor: pointer;
-          transition: background 0.15s;
+          transition: background 0.15s, color 0.15s;
         }
-        .btn-cancel:hover { background: #e5e0d6; }
+        .btn-cancel:hover { background: var(--border); }
         .btn-cancel:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .btn-save {
-          background: #1a1a1a;
-          color: #fff;
+          background: var(--text-primary);
+          color: var(--bg-page);
           border: none;
           padding: 0.65rem 1.5rem;
           border-radius: 10px;
@@ -608,31 +710,36 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
           font-size: 0.9rem;
           font-weight: 500;
           cursor: pointer;
-          transition: background 0.18s;
+          transition: opacity 0.18s, background 0.25s ease, color 0.25s ease;
           display: flex;
           align-items: center;
           gap: 0.45rem;
           min-width: 130px;
           justify-content: center;
         }
-        .btn-save:hover { background: #333; }
+        .btn-save:hover { opacity: 0.82; }
         .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-save.green { background: #166534; }
+        .btn-save.green {
+          background: #166534;
+          color: #fff;
+        }
         .btn-save.green:hover { background: #14532d; }
 
         .modal-progress {
           height: 2px;
-          background: #e0dbd0;
+          background: var(--border);
           border-radius: 99px;
           margin-bottom: 1.25rem;
           overflow: hidden;
+          transition: background 0.25s ease;
         }
         .modal-progress-bar {
           height: 100%;
-          background: #b45309;
+          background: var(--accent);
           border-radius: 99px;
           animation: prog 1.2s ease-in-out infinite;
           transform-origin: left;
+          transition: background 0.25s ease;
         }
         @keyframes prog {
           0%   { transform: translateX(-100%) scaleX(0.4); }
@@ -692,6 +799,16 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
               </svg>
             </button>
           </div>
+
+          {/* Theme toggle */}
+          <button
+            className="theme-btn"
+            onClick={toggleTheme}
+            title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+            aria-label="Toggle theme"
+          >
+            {theme === "light" ? <MoonIcon /> : <SunIcon />}
+          </button>
         </div>
 
         {/* Meta */}
@@ -717,7 +834,7 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
                 <div
                   key={note._id}
                   className={`note-card grid-card ${isBeingDeleted ? "is-deleting" : ""}`}
-                  style={{ "--accent": getAccent(index) } as React.CSSProperties}
+                  style={{ "--accent-color": getAccent(index) } as React.CSSProperties}
                 >
                   <div className="grid-card-header">
                     <h3 className="grid-card-title">{note.title}</h3>
@@ -762,7 +879,7 @@ const NotesClient = ({ initialNotes }: NotesClientProps) => {
                 <div
                   key={note._id}
                   className={`note-card list-card ${isBeingDeleted ? "is-deleting" : ""}`}
-                  style={{ "--accent": getAccent(index) } as React.CSSProperties}
+                  style={{ "--accent-color": getAccent(index) } as React.CSSProperties}
                 >
                   <div className="list-card-inner">
                     <div className="list-card-text">
